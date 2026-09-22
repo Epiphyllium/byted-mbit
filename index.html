@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>牛马人格测试 · BYTEDANCE EDITION</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700;800&display=swap">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Noto Sans SC', -apple-system, sans-serif;
+    background: #FFF4D6; color: #0A0A0A;
+    overflow: hidden; -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  .dots {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: radial-gradient(#0A0A0A 1.2px, transparent 1.3px);
+    background-size: 18px 18px; opacity: 0.08;
+  }
+  .app {
+    position: relative; z-index: 1; max-width: 480px; height: 100%;
+    margin: 0 auto; display: flex; flex-direction: column;
+  }
+  .view { display: none; flex: 1; flex-direction: column; padding: 20px; min-height: 0; overflow: hidden; }
+  .view.active { display: flex; }
+
+  .pop-tag {
+    display: inline-block; padding: 6px 12px;
+    background: #0A0A0A; color: #FFF4D6;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    border: 2.5px solid #0A0A0A; box-shadow: 3px 3px 0 #0A0A0A;
+    text-transform: uppercase;
+  }
+
+  /* 欢迎页 */
+  #view-welcome { justify-content: center; }
+  .welcome-head { margin-bottom: 24px; }
+  .mega-title {
+    font-size: 52px; font-weight: 900; line-height: 0.95;
+    letter-spacing: -2px; margin-top: 18px;
+  }
+  .mega-title .l1 {
+    display: inline-block; background: #2B5AED; color: #FFF4D6;
+    padding: 4px 12px; border: 3px solid #0A0A0A;
+    box-shadow: 6px 6px 0 #0A0A0A; transform: rotate(-1.5deg);
+  }
+  .mega-title .l2 {
+    display: inline-block; background: #FF3B30; color: #FFF4D6;
+    padding: 4px 12px; border: 3px solid #0A0A0A;
+    box-shadow: 6px 6px 0 #0A0A0A; transform: rotate(1deg); margin-top: 10px;
+  }
+  .welcome-sub {
+    font-size: 14px; line-height: 1.7; margin: 26px 0 22px; font-weight: 500;
+  }
+  .welcome-sub b { background: #FFD60A; padding: 0 4px; }
+  .dim-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px;
+  }
+  .dim-cell {
+    border: 2.5px solid #0A0A0A; padding: 10px 12px;
+    box-shadow: 4px 4px 0 #0A0A0A; background: #fff;
+  }
+  .dim-cell .dl { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 4px; color: inherit; opacity: 0.7; }
+  .dim-cell .dv { font-size: 13px; font-weight: 700; line-height: 1.3; }
+  .dim-cell:nth-child(1) { background: #FFD60A; }
+  .dim-cell:nth-child(2) { background: #00C2D1; }
+  .dim-cell:nth-child(3) { background: #FF3B30; color: #FFF4D6; }
+  .dim-cell:nth-child(4) { background: #2B5AED; color: #FFF4D6; }
+
+  .btn-pop {
+    width: 100%; padding: 18px; background: #FF3B30; color: #FFF4D6;
+    border: 3px solid #0A0A0A; box-shadow: 6px 6px 0 #0A0A0A;
+    font-family: inherit; font-size: 18px; font-weight: 900;
+    cursor: pointer; letter-spacing: 1px;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .btn-pop:active { transform: translate(3px,3px); box-shadow: 3px 3px 0 #0A0A0A; }
+  .welcome-meta { margin-top: 14px; font-family: 'JetBrains Mono', monospace; font-size: 11px; opacity: 0.6; text-align: center; }
+
+  /* 答题页 */
+  .quiz-top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .progress-track { flex: 1; height: 18px; background: #fff; border: 2.5px solid #0A0A0A; position: relative; }
+  .progress-fill { position: absolute; top: 0; left: 0; height: 100%; background: #FFD60A; border-right: 2.5px solid #0A0A0A; transition: width 0.3s; }
+  .q-num { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 14px; background: #0A0A0A; color: #FFF4D6; padding: 4px 10px; border: 2.5px solid #0A0A0A; }
+  .q-banner {
+    display: inline-block; padding: 4px 10px; background: #00C2D1;
+    border: 2.5px solid #0A0A0A; box-shadow: 3px 3px 0 #0A0A0A;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800;
+    letter-spacing: 1.5px; margin-bottom: 14px; transform: rotate(-0.5deg);
+  }
+  .q-card { background: #fff; border: 3px solid #0A0A0A; box-shadow: 6px 6px 0 #0A0A0A; padding: 22px 18px; margin-bottom: 22px; }
+  .q-text { font-size: 21px; font-weight: 900; line-height: 1.4; letter-spacing: -0.3px; }
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .opt-btn {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 14px; border: 3px solid #0A0A0A; box-shadow: 5px 5px 0 #0A0A0A;
+    font-family: inherit; cursor: pointer; text-align: left;
+    font-size: 13px; font-weight: 500; line-height: 1.45; color: #0A0A0A; min-height: 90px;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .opt-btn.opt-a { background: #FFD60A; }
+  .opt-btn.opt-b { background: #FFE89A; }
+  .opt-btn.opt-c { background: #9BE8F0; }
+  .opt-btn.opt-d { background: #00C2D1; }
+  .opt-btn:active { transform: translate(2px,2px); box-shadow: 3px 3px 0 #0A0A0A; }
+  .opt-btn.selected { background: #0A0A0A; color: #FFF4D6; }
+  .opt-letter {
+    flex-shrink: 0; width: 26px; height: 26px;
+    border: 2.5px solid #0A0A0A; background: #fff; color: #0A0A0A;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 13px;
+  }
+  .opt-btn.selected .opt-letter { background: #FFD60A; color: #0A0A0A; }
+  .quiz-next { margin-top: auto; padding-top: 18px; }
+  .btn-next {
+    width: 100%; padding: 16px; background: #fff; color: #999;
+    border: 3px solid #0A0A0A; box-shadow: 6px 6px 0 #0A0A0A;
+    font-family: inherit; font-size: 16px; font-weight: 900;
+    cursor: not-allowed; letter-spacing: 1px;
+  }
+  .btn-next.ready { background: #2B5AED; color: #FFF4D6; cursor: pointer; }
+  .btn-next.ready:active { transform: translate(3px,3px); box-shadow: 3px 3px 0 #0A0A0A; }
+
+  /* 结果页 */
+  .result-scroll { flex: 1; overflow-y: auto; padding-bottom: 20px; min-height: 0; -webkit-overflow-scrolling: touch; }
+  .result-hero {
+    background: #FF3B30; color: #FFF4D6;
+    border: 3px solid #0A0A0A; box-shadow: 8px 8px 0 #0A0A0A;
+    padding: 24px 20px; margin-bottom: 20px; position: relative; overflow: hidden;
+  }
+  .result-hero::before {
+    content: ''; position: absolute; top: 10px; right: 10px; width: 60px; height: 60px;
+    background-image: radial-gradient(#FFF4D6 2px, transparent 2.2px);
+    background-size: 10px 10px; opacity: 0.5;
+  }
+  .result-code {
+    display: inline-block; background: #0A0A0A; color: #FFD60A;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800;
+    letter-spacing: 2px; padding: 4px 10px; margin-bottom: 14px;
+  }
+  .result-name { font-size: 30px; font-weight: 900; line-height: 1.15; margin-bottom: 10px; letter-spacing: -0.5px; }
+  .result-slogan { font-size: 14px; line-height: 1.55; font-weight: 500; opacity: 0.95; }
+  .r-card { background: #fff; border: 3px solid #0A0A0A; box-shadow: 6px 6px 0 #0A0A0A; padding: 18px; margin-bottom: 16px; }
+  .r-card h3 {
+    display: inline-block; font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 800; letter-spacing: 2px;
+    padding: 4px 10px; background: #0A0A0A; color: #FFF4D6; margin-bottom: 14px;
+  }
+  .trait-list { list-style: none; }
+  .trait-list li {
+    font-size: 14px; line-height: 1.55; padding: 10px 0;
+    border-bottom: 2px dashed #0A0A0A; display: flex; gap: 10px; font-weight: 500;
+  }
+  .trait-list li:last-child { border-bottom: none; }
+  .trait-list li::before { content: '▸'; flex-shrink: 0; font-weight: 900; color: #FF3B30; }
+  .dim-row { margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .dim-row:last-child { margin-bottom: 0; }
+  .dim-row .dim-side { font-size: 14px; font-weight: 900; flex-shrink: 0; width: 24px; text-align: center; }
+  .dim-row .dim-side.left { color: #2B5AED; }
+  .dim-row .dim-side.right { color: #FF3B30; }
+  .dim-row .dim-track { flex: 1; height: 16px; background: #FFF4D6; border: 2.5px solid #0A0A0A; position: relative; overflow: hidden; }
+  .dim-row .dim-fill { position: absolute; top: 0; left: 0; height: 100%; background: repeating-linear-gradient(45deg, #2B5AED, #2B5AED 6px, #00C2D1 6px, #00C2D1 12px); transition: width 0.6s ease; }
+  .dim-row .pct { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 800; background: #FFD60A; padding: 2px 6px; border: 2px solid #0A0A0A; flex-shrink: 0; min-width: 48px; text-align: center; }
+  .advice { background: #FFD60A; border: 2.5px solid #0A0A0A; padding: 14px; font-size: 14px; line-height: 1.6; font-weight: 500; }
+  .match-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .match-cell { border: 2.5px solid #0A0A0A; padding: 12px; text-align: center; }
+  .match-cell.good { background: #00C2D1; }
+  .match-cell.bad { background: #FF3B30; color: #FFF4D6; }
+  .match-cell .ml { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; opacity: 0.8; margin-bottom: 6px; }
+  .match-cell .mv { font-size: 13px; font-weight: 900; line-height: 1.3; }
+  .result-actions { display: flex; gap: 10px; }
+  .btn-ghost {
+    flex: 1; padding: 14px; background: #fff;
+    border: 3px solid #0A0A0A; box-shadow: 4px 4px 0 #0A0A0A;
+    font-family: inherit; font-size: 14px; font-weight: 800; cursor: pointer; color: #0A0A0A;
+  }
+  .btn-ghost:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 #0A0A0A; }
+
+  @keyframes popIn {
+    0% { opacity: 0; transform: translateY(20px) rotate(-1deg); }
+    100% { opacity: 1; transform: translateY(0) rotate(0); }
+  }
+  .view.active > * { animation: popIn 0.35s cubic-bezier(0.2,0.8,0.2,1) both; }
+  .view.active > *:nth-child(2) { animation-delay: 0.06s; }
+  .view.active > *:nth-child(3) { animation-delay: 0.12s; }
+  .view.active > *:nth-child(4) { animation-delay: 0.18s; }
+  .view.active > *:nth-child(5) { animation-delay: 0.24s; }
+</style>
+</head>
+<body>
+<div class="dots"></div>
+<div class="app">
+
+  <div class="view active" id="view-welcome">
+    <div class="welcome-head">
+      <span class="pop-tag">字节内部 · 牛马鉴定所</span>
+      <div class="mega-title">
+        <span class="l1">字节人格</span><br>
+        <span class="l2">大测试</span>
+      </div>
+    </div>
+    <p class="welcome-sub">
+      在字节，你到底是哪一种牛马。<br>
+    </p>
+    <div class="dim-grid">
+      <div class="dim-cell"><div class="dl">DIM 1</div><div class="dv">卷 vs 佛</div></div>
+      <div class="dim-cell"><div class="dl">DIM 2</div><div class="dv">演 vs 干</div></div>
+      <div class="dim-cell"><div class="dl">DIM 3</div><div class="dv">刚 vs 苟</div></div>
+      <div class="dim-cell"><div class="dl">DIM 4</div><div class="dv">焦 vs 麻</div></div>
+    </div>
+    <button class="btn-pop" onclick="startQuiz()">开始鉴定 →</button>
+    <div class="welcome-meta">20 QUESTIONS · 结果仅供到处转发，一切后果自负嘻嘻</div>
+  </div>
+
+  <div class="view" id="view-quiz">
+    <div class="quiz-top">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="q-num" id="qNum">01</div>
+    </div>
+    <div class="q-card"><div class="q-text" id="qText"></div></div>
+    <div class="options" id="options"></div>
+    <div class="quiz-next">
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()">下一题</button>
+    </div>
+  </div>
+
+  <div class="view" id="view-result">
+    <div class="result-scroll" id="resultScroll"></div>
+    <div class="result-actions">
+      <button class="btn-ghost" onclick="restart()">↻ 重测</button>
+      <button class="btn-ghost" onclick="saveImage()">⧉ 复制结果图</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// DIM_LABELS: 0=卷/演/刚/焦 (A), 1=佛/干/苟/麻 (B)
+const DIM_LABELS = [
+  { left: '卷', right: '佛' },
+  { left: '演', right: '干' },
+  { left: '刚', right: '苟' },
+  { left: '焦', right: '麻' }
+];
+
+const QUESTIONS = [
+  // DIM 1: 卷 vs 佛 (a=非常卷+2, b=有点卷+1, c=有点佛-1, d=非常佛-2)
+  { dim: 0, tag: 'DIM 1 · 卷 or 佛',
+    q: '周五下班前 5 分钟，老板在群里发"这个需求下周一要"，你：',
+    a: '打开电脑开始排期，顺便把周末安排推了',
+    b: '看一眼，周一早上到工位再说',
+    c: '先装没看见，真被催了再回',
+    d: '已读不回，周末的事下周再说' },
+  { dim: 0, tag: 'DIM 1 · 卷 or 佛',
+    q: '周末有人看到你飞书在线，你其实：',
+    a: '真的在改 bug，顺手还开了个文档',
+    b: '人在外面但偶尔瞟一眼',
+    c: '手机弹了个通知，点开回了两句',
+    d: '飞书没退，人在外面吃火锅根本没看' },
+  { dim: 0, tag: 'DIM 1 · 卷 or 佛',
+    q: '组里有个没人愿意接的烂活，你：',
+    a: '主动接了，觉得能学到东西',
+    b: '老板点我了，那我接吧',
+    c: '假装没看见，看有没有别人接',
+    d: '谁接谁背锅，看不见我看不见我看不见我' },
+  { dim: 0, tag: 'DIM 1 · 卷 or 佛',
+    q: '你对"差不多就行"这五个字：',
+    a: '不行，过不了我自己这关',
+    b: '流程正确，怎么决策的，过程是什么，拟个文档',
+    c: '怎么都行，只要别让我背锅',
+    d: '糊弄糊弄得了，又不是我的公司' },
+  { dim: 0, tag: 'DIM 1 · 卷 or 佛',
+    q: '年度自评，你给自己打：',
+    a: '不够好，明年必须更努力',
+    b: '还行，今年有进步',
+    c: '活下来了，及格，谢谢',
+    d: '给你干就不错了，只有公司对不起我' },
+
+  // DIM 2: 演 vs 干 (a=非常演+2, b=有点演+1, c=有点干-1, d=非常干-2)
+  { dim: 1, tag: 'DIM 2 · 演 or 干',
+    q: '写周报时你：',
+    a: '把改 bug 包装成"闭环了一个用户体验痛点"，图文并貌',
+    b: '稍微润色一下，加几个大词，ai启动',
+    c: '正常写，改了啥就写啥',
+    d: '流水账：本周改了 3 个 bug，开了 5 个会' },
+  { dim: 1, tag: 'DIM 2 · 演 or 干',
+    q: '大老板巡场突然问进度，你：',
+    a: '早准备好了文档，数据烂熟于心',
+    b: '心里一紧，但嘴上能说得头头是道',
+    c: '心里一慌，含糊说"还行，在推进"，然后紧急问AI',
+    d: '立即回复：我看一下，然后开始大数分' },
+  { dim: 1, tag: 'DIM 2 · 演 or 干',
+    q: '你在飞书群里的活跃度：',
+    a: '经常发长文、发链接、发个人感想',
+    b: '关键节点冒个泡',
+    c: '只在被 at 时出现，回个表情',
+    d: '群里查无此人，我是谁' },
+  { dim: 1, tag: 'DIM 2 · 演 or 干',
+    q: '项目成了，你倾向：',
+    a: '主动在大群同步进展，配精美截图',
+    b: '在小群里同步一下',
+    c: '老板问了再说',
+    d: '私下发给老板，分析123，然后回去接着干活' },
+  { dim: 1, tag: 'DIM 2 · 演 or 干',
+    q: '你的工位：',
+    a: '有"奋斗""极致""今天也要加油"之类的摆件',
+    b: '有个水杯和笔记本，挺正常',
+    c: '什么都没有，整洁得像随时要离职',
+    d: '乱七八糟什么都有，无暇顾及，忙到飞起' },
+
+  // DIM 3: 刚 vs 苟 (a=非常刚+2, b=有点刚+1, c=有点苟-1, d=非常苟-2)
+  { dim: 2, tag: 'DIM 3 · 刚 or 苟',
+    q: '群里有人把锅甩给你，你：',
+    a: '当场甩出聊天记录和 commit 历史怼回去',
+    b: '在群里澄清两句，但不吵架',
+    c: '私聊他说"兄弟你这样不太合适"',
+    d: '自己默默背了，心里悄悄记账' },
+  { dim: 2, tag: 'DIM 3 · 刚 or 苟',
+    q: '评审会你的方案被骂成狗，你：',
+    a: '当场反驳，据理力争，声音越来越大',
+    b: '会上辩解两句，会后再补材料',
+    c: '会上点头"好的收到"，回去默默改',
+    d: '会上点头"好的收到"，会后吐槽你懂个屁' },
+  { dim: 2, tag: 'DIM 3 · 刚 or 苟',
+    q: '跨部门扯皮，你：',
+    a: '拉三方会议，+1全部拉进来，都别活',
+    b: '先在群里把事实列清楚，文档说清123',
+    c: '在群里发三个表情包，让它过去',
+    d: '找自己 leader 私下说，让 leader 去撕' },
+  { dim: 2, tag: 'DIM 3 · 刚 or 苟',
+    q: '同事找你帮忙但你自己活都干不完，你：',
+    a: '直接说"我没时间，你找别人"',
+    b: '"我看看，这周可能排不上"',
+    c: '嘴上说"好的"，然后拖到他放弃',
+    d: '嘴上说"好的"，然后加班帮他干了' },
+  { dim: 2, tag: 'DIM 3 · 刚 or 苟',
+    q: '你收到最多的同事评价：',
+    a: '"你也太勇了"',
+    b: '"你这人挺有原则的"',
+    c: '"你挺好说话的"',
+    d: '"你脾气是真的好"' },
+
+  // DIM 4: 焦 vs 麻 (a=非常焦+2, b=有点焦+1, c=有点麻-1, d=非常麻-2)
+  { dim: 3, tag: 'DIM 4 · 焦 or 麻',
+    q: '下班路上你在想：',
+    a: '今天那个需求是不是有个坑没填',
+    b: '明天开会要准备点东西',
+    c: '终于下班了，明天的事明天说',
+    d: '明天吃什么' },
+  { dim: 3, tag: 'DIM 4 · 焦 or 麻',
+    q: '半夜三点手机响了（告警/老板消息），你：',
+    a: '秒醒，摸手机看是哪个线上事故',
+    b: '醒了，看一眼，不是大事就继续睡',
+    c: '迷迷糊糊看一眼，明天再说',
+    d: '翻个身，明天再说，天塌不下来' },
+  { dim: 3, tag: 'DIM 4 · 焦 or 麻',
+    q: '听说组里可能要优化，你：',
+    a: '当晚就开始改简历刷面试题',
+    b: '心里咯噔一下，但先观察观察',
+    c: '哦，跟我有啥关系',
+    d: '裁裁呗，跪下来求一个大礼包' },
+  { dim: 3, tag: 'DIM 4 · 焦 or 麻',
+    q: '你的年假：',
+    a: '几乎不请，请了也在工位上远程回消息',
+    b: '该休就休，但会把电脑带着',
+    c: '休，但临走前把事都交代好',
+    d: '必须休完，不休是公司赚了' },
+  { dim: 3, tag: 'DIM 4 · 焦 or 麻',
+    q: '早上闹钟响了，你的第一反应：',
+    a: '心死，又要去上班了',
+    b: '叹气，但还是起来了',
+    c: '按掉闹钟，赖五分钟再起',
+    d: '麻木，按掉闹钟，机械起床' }
+];
+
+const RESULTS = {
+  '0000': { name: '职场表演家', code: 'HUSTLE·PERFORM·CONFRONT·ANXIOUS',
+    slogan: '周报写得比代码好，凌晨两点还在群里发"收到"，朋友圈全是正能量。',
+    traits: [ '你是那种老板夸完"这个同学很有 owner 意识"的人',
+              '你加班不全为了活，主要是为了被看到',
+              '你的情绪在焦虑和亢奋之间反复横跳',
+              '所有人都觉得你要晋升，只有你自己知道你快 burnout 了' ],
+    advice: '偶尔试试不发周报，看看天会不会塌。',
+    good: '闷声干活家', bad: '暴躁划水人' },
+  '0001': { name: '精致利己卷王', code: 'HUSTLE·PERFORM·CONFRONT·NUMB',
+    slogan: '卷是真卷，但每一分钟都演给老板看。下班秒消失，谁也别想找到你。',
+    traits: [ '你非常清楚哪些活能见老板，哪些活是纯消耗',
+              '你怼人专挑软柿子，硬茬你比谁都客气',
+              '你的飞书状态永远是"专注"，但下午三点经常不在工位',
+              '你不是来改变世界的，你是来升职加薪的' ],
+    advice: '演得久了小心自己也信了。',
+    good: '软柿子牛马', bad: '暴躁老实人' },
+  '0010': { name: '向上管理大师', code: 'HUSTLE·PERFORM·SNEAK·ANXIOUS',
+    slogan: '谁都不得罪，谁的群都接，老板点赞比谁都快，但活其实是别人干的。',
+    traits: [ '你在任何群都能精准地发"感谢分享！"',
+              '你不轻易表态，因为你还不知道老板站哪边',
+              '你焦虑的不是活，是老板今天看你的眼神对不对',
+              '你的离职传闻永远是"他要被提拔了"，不是"他要走了"' ],
+    advice: '小心捧得太高摔下来。',
+    good: '职场老戏骨', bad: '暴躁老实人' },
+  '0011': { name: '职场老戏骨', code: 'HUSTLE·PERFORM·SNEAK·NUMB',
+    slogan: '表情管理拉满，内心毫无波动。周一早上"好的收到"，下班打卡一秒消失。',
+    traits: [ '你已经修炼到嘴上"好的好的"心里"去你妈的"',
+              '你什么活都接，但什么活都做到 60 分',
+              '你不离职是因为你知道去哪都一样',
+              '新人和老板都觉得你是个好脾气的老人' ],
+    advice: '别演到最后把自己演离职了。',
+    good: '软柿子牛马', bad: '键盘战士现实怂' },
+  '0100': { name: '真·干活冤种', code: 'HUSTLE·WORK·CONFRONT·ANXIOUS',
+    slogan: '活是你干的，锅是你背的，群里还敢怼人，焦虑得每周都在想离职。',
+    traits: [ '你是组里那个"这事找他准没错"的人',
+              '你技术硬但脾气差，同事又爱你又怕你',
+              '你加班到半夜但不会写周报，所以功劳总被会演的抢走',
+              '你的离职信草稿已经写了三版，但每次都没发出去' ],
+    advice: '活干得多不如活说得好，学两句汇报话术不丢人。',
+    good: '职场表演家', bad: '职场老戏骨' },
+  '0101': { name: '沉默老黄牛', code: 'HUSTLE·WORK·CONFRONT·NUMB',
+    slogan: '不声不响把活干了，谁甩锅就硬刚，下班准时走，情绪稳定得像石头。',
+    traits: [ '你是组里最靠谱的人，但你从不说',
+              '你不发长文不抢功，但谁动你蛋糕你跟谁急',
+              '你已经过了会为工作失眠的阶段',
+              '你的周报永远只有三行，但每一行都是实事' ],
+    advice: '你这种人其实最可怕——不声不响就晋升了。',
+    good: '向上管理大师', bad: '带薪如厕艺术家' },
+  '0110': { name: '老好人卷王', code: 'HUSTLE·WORK·SNEAK·ANXIOUS',
+    slogan: '活接得最多，话听得最多，谁都不得罪，自己加班到崩溃。',
+    traits: [ '你不会拒绝人，所以你的待办列表是全组最长的',
+              '你帮所有人擦屁股，但没人帮你擦',
+              '你焦虑得要死但脸上还挂着笑',
+              '你的口头禅是"好的没问题"，然后回家哭' ],
+    advice: '学会说"这个我评估一下"，给自己留条退路。',
+    good: '职场老戏骨', bad: '暴躁划水人' },
+  '0111': { name: '闷声干活家', code: 'HUSTLE·WORK·SNEAK·NUMB',
+    slogan: '不发周报不抢功，活干得最好，谁都不知道你存在。',
+    traits: [ '你在组里的存在感约等于背景板',
+              '但线上出事第一个被找的永远是你',
+              '你不焦虑因为你知道自己的价值',
+              '老板换了三任，你还在，而且你比谁都稳' ],
+    advice: '偶尔让老板知道你在，不然晋升答辩没人记得你。',
+    good: '职场表演家', bad: '已读不回大师' },
+  '1000': { name: '暴躁划水人', code: 'CHILL·PERFORM·CONFRONT·ANXIOUS',
+    slogan: '活不干但脾气大，群里谁敢 @ 就怼谁，边摸鱼边焦虑。',
+    traits: [ '你摸鱼的时候比干活的时候精神多了',
+              '你谁都敢怼，但你的 KPI 也没人在乎',
+              '你焦虑是因为你知道自己在划水但改不了',
+              '你的名言："凭什么是我？"' ],
+    advice: '要么怼得有水平，要么别怼。光发泄没用。',
+    good: '沉默老黄牛', bad: '职场表演家' },
+  '1001': { name: '带薪如厕艺术家', code: 'CHILL·PERFORM·CONFRONT·NUMB',
+    slogan: '一天八百趟厕所，谁找都不在工位。但真要干活了你比谁都快。',
+    traits: [ '你工位上的椅子永远是凉的',
+              '你不是在厕所就是在去厕所的路上',
+              '你已经麻了，谁也别想 PUA 你',
+              '你绩效不高但也不低，正好卡在中间安全区' ],
+    advice: '小心别被优化的时候第一个想起你。',
+    good: '闷声干活家', bad: '真·干活冤种' },
+  '1010': { name: '已读不回大师', code: 'CHILL·PERFORM·SNEAK·ANXIOUS',
+    slogan: '消息已读两小时，回了个"好的"然后没了。群里发言靠表情包。',
+    traits: [ '你的消息已读率 100%，回复率 30%',
+              '你不是不回，你是在想怎么回最不得罪人',
+              '你焦虑是因为你知道该回但你不想回',
+              '你的飞书头像非常低调，就是为了不被注意' ],
+    advice: '已读不回比直接拒绝更得罪人，不如直说。',
+    good: '职场老戏骨', bad: '真·干活冤种' },
+  '1011': { name: '职场隐形人', code: 'CHILL·PERFORM·SNEAK·NUMB',
+    slogan: '年会合影找不到你，组会你在但不说话，存在感为零。',
+    traits: [ '你在公司三年了，隔壁组还有人以为你是实习生',
+              '你不开会不发言不抢功，绩效 M 是你的安全区',
+              '你已经麻了，荣辱不惊',
+              '裁员名单上大概率不会有你——因为没人记得你' ],
+    advice: '隐形是你的保护色，但小心隐形太久被遗忘。',
+    good: '软柿子牛马', bad: '职场表演家' },
+  '1100': { name: '暴躁老实人', code: 'CHILL·WORK·CONFRONT·ANXIOUS',
+    slogan: '活干了但不爽，谁说你都敢怼，天天想离职但天天来上班。',
+    traits: [ '你活没少干，但你的抱怨比活还多',
+              '你看不惯这个看不惯那个，嘴上不饶人',
+              '你焦虑是因为你想走但又不敢走',
+              '你的离职信写了删删了写，最后还是打开飞书继续干活' ],
+    advice: '要么闭嘴干活，要么闭嘴走人，别两头都占。',
+    good: '沉默老黄牛', bad: '向上管理大师' },
+  '1101': { name: '键盘战士现实怂', code: 'CHILL·WORK·CONFRONT·NUMB',
+    slogan: '群里不说话，同事小群吐槽一堆，实际啥也不干，下班绝不多待一分钟。',
+    traits: [ '你有三个群：工作群、摸鱼群、骂公司群',
+              '你当面唯唯诺诺，背后重拳出击',
+              '你已经麻了，吐槽是你唯一的精神出口',
+              '你活干得一般，但你对别人的活评头论足很专业' ],
+    advice: '背后吐槽不如当面说，或者干脆别说。',
+    good: '暴躁老实人', bad: '职场老戏骨' },
+  '1110': { name: '软柿子牛马', code: 'CHILL·WORK·SNEAK·ANXIOUS',
+    slogan: '活给你你就接，骂你你也不还嘴，回家一个人 emo。',
+    traits: [ '你是组里最好说话的人，所以谁都来找你',
+              '你不敢拒绝，不敢吵架，不敢争取',
+              '你焦虑是因为你知道自己被欺负但不知道怎么反抗',
+              '你的年度关键词：忍' ],
+    advice: '温和不是软弱，学会说"不"是你这辈子最重要的职场技能。',
+    good: '职场老戏骨', bad: '暴躁划水人' },
+  '1111': { name: '带薪入定大师', code: 'CHILL·WORK·SNEAK·NUMB',
+    slogan: '都行可以没关系，工位上坐一天，灵魂已经离职了。',
+    traits: [ '你已经到了"色即是空"的境界',
+              '老板画饼你听着，同事撕逼你看着，需求来了你接着',
+              '你不焦虑不愤怒不快乐，你只是在',
+              '别人问你最近怎么样，你说"就那样"，然后微微一笑' ],
+    advice: '你已经是牛马天花板了。接下来要么成佛，要么跑路。' }
+};
+
+let current = 0, answers = [];
+const SCORE = { a: 2, b: 1, c: -1, d: -2 };
+function startQuiz() { current = 0; answers = []; switchView('view-quiz'); renderQuestion(); }
+function renderQuestion() {
+  const q = QUESTIONS[current];
+  document.getElementById('qNum').textContent = String(current+1).padStart(2,'0');
+  document.getElementById('qText').textContent = q.q;
+  document.getElementById('progressFill').style.width = (current/QUESTIONS.length*100)+'%';
+  document.getElementById('options').innerHTML = `
+    <button class="opt-btn opt-a" onclick="pick(this,'a')"><span class="opt-letter">A</span><span>${q.a}</span></button>
+    <button class="opt-btn opt-b" onclick="pick(this,'b')"><span class="opt-letter">B</span><span>${q.b}</span></button>
+    <button class="opt-btn opt-c" onclick="pick(this,'c')"><span class="opt-letter">C</span><span>${q.c}</span></button>
+    <button class="opt-btn opt-d" onclick="pick(this,'d')"><span class="opt-letter">D</span><span>${q.d}</span></button>`;
+  const btn = document.getElementById('btnNext');
+  btn.classList.remove('ready');
+  btn.textContent = current === QUESTIONS.length-1 ? '鉴定结果 →' : '下一题 →';
+}
+function pick(el, p) {
+  document.querySelectorAll('.opt-btn').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected'); answers[current] = p;
+  document.getElementById('btnNext').classList.add('ready');
+}
+function nextQuestion() {
+  if (!answers[current]) return;
+  if (current < QUESTIONS.length-1) { current++; renderQuestion(); }
+  else showResult();
+}
+function calcResult() {
+  const scores = [0, 0, 0, 0];
+  QUESTIONS.forEach((q, i) => { scores[q.dim] += SCORE[answers[i]]; });
+  let code = '', dims = [];
+  scores.forEach(s => {
+    const pct = Math.round((s + 10) / 20 * 100);
+    dims.push(pct);
+    code += s >= 0 ? '0' : '1';
+  });
+  return { code, dims };
+}
+function showResult() {
+  const { code, dims } = calcResult();
+  const r = RESULTS[code];
+  const traits = r.traits.map(t => `<li>${t}</li>`).join('');
+  const barsHtml = DIM_LABELS.map((d,i) => `
+    <div class="dim-row">
+      <span class="dim-side left">${d.left}</span>
+      <div class="dim-track"><div class="dim-fill" style="width:${dims[i]}%"></div></div>
+      <span class="pct">${dims[i]}%</span>
+      <span class="dim-side right">${d.right}</span>
+    </div>`).join('');
+  document.getElementById('resultScroll').innerHTML = `
+    <div class="result-hero">
+      <div class="result-code mono">${r.code}</div>
+      <div class="result-name">${r.name}</div>
+      <div class="result-slogan">${r.slogan}</div>
+    </div>
+    <div class="r-card"><h3>你就是这种牛马</h3><ul class="trait-list">${traits}</ul></div>
+    <div class="r-card"><h3>维度分布</h3>${barsHtml}</div>
+    <div class="r-card"><h3>牛马生存建议</h3><div class="advice">${r.advice}</div></div>
+    <div class="r-card"><h3>同事图鉴</h3>
+      <div class="match-grid">
+        <div class="match-cell good"><div class="ml">最佳搭档</div><div class="mv">${r.good}</div></div>
+        <div class="match-cell bad"><div class="ml">最怕遇到</div><div class="mv">${r.bad}</div></div>
+      </div>
+    </div>`;
+  switchView('view-result');
+  window._lastResult = r;
+  window._lastDims = dims;
+}
+function restart() { switchView('view-welcome'); }
+
+function saveImage() {
+  const r = window._lastResult;
+  const dims = window._lastDims;
+  if (!r || !dims) return;
+
+  const W = 750, PAD = 30, CARD_W = W - PAD * 2;
+  // 先算高度
+  let y = PAD;
+  const heroH = 230;
+  y += heroH + 24;
+  const traitsH = 60 + r.traits.length * 52;
+  y += traitsH + 24;
+  const dimsH = 60 + 4 * 48;
+  y += dimsH + 24;
+  const adviceH = 130;
+  y += adviceH + 24;
+  const matchH = 130;
+  y += matchH + PAD;
+  const H = y;
+
+  const c = document.createElement('canvas');
+  c.width = W * 2; c.height = H * 2;
+  const ctx = c.getContext('2d');
+  ctx.scale(2, 2);
+
+  // 背景
+  ctx.fillStyle = '#FFF4D6';
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(10,10,10,0.06)';
+  for (let x = 0; x < W; x += 18) for (let yy = 0; yy < H; yy += 18) ctx.fillRect(x, yy, 2, 2);
+
+  let cy = PAD;
+
+  // ===== Hero 红块 =====
+  ctx.fillStyle = '#FF3B30';
+  ctx.fillRect(PAD, cy, CARD_W, heroH);
+  ctx.strokeStyle = '#0A0A0A'; ctx.lineWidth = 3;
+  ctx.strokeRect(PAD, cy, CARD_W, heroH);
+  // 硬阴影
+  ctx.fillStyle = '#0A0A0A';
+  ctx.fillRect(PAD + 6, cy + 6, CARD_W, heroH);
+  // 重画前景（阴影在下面）
+  ctx.fillStyle = '#FF3B30';
+  ctx.fillRect(PAD, cy, CARD_W, heroH);
+  ctx.strokeRect(PAD, cy, CARD_W, heroH);
+  // 右上角网点
+  ctx.fillStyle = 'rgba(255,244,214,0.4)';
+  for (let dx = 0; dx < 6; dx++) for (let dy = 0; dy < 6; dy++) ctx.beginPath(), ctx.arc(W - PAD - 30 - dx * 14, cy + 30 + dy * 14, 3, 0, Math.PI * 2), ctx.fill();
+  // code 黑标签
+  ctx.fillStyle = '#0A0A0A';
+  ctx.fillRect(PAD + 24, cy + 28, ctx.measureText(r.code).width + 24, 28);
+  ctx.fillStyle = '#FFD60A';
+  ctx.font = '800 13px "JetBrains Mono", monospace';
+  ctx.fillText(r.code, PAD + 36, cy + 47);
+  // name
+  ctx.fillStyle = '#FFF4D6';
+  ctx.font = '900 46px "Noto Sans SC", sans-serif';
+  ctx.fillText(r.name, PAD + 24, cy + 110);
+  // slogan
+  ctx.font = '500 15px "Noto Sans SC", sans-serif';
+  wrapText(ctx, r.slogan, PAD + 24, cy + 150, CARD_W - 48, 22);
+  cy += heroH + 30;
+
+  // ===== 画像卡片 =====
+  drawCard(ctx, PAD, cy, CARD_W, traitsH, '你就是这种牛马');
+  let ty = cy + 60;
+  r.traits.forEach((t, i) => {
+    ctx.fillStyle = '#FF3B30';
+    ctx.font = '900 16px "Noto Sans SC", sans-serif';
+    ctx.fillText('▸', PAD + 24, ty + 5);
+    ctx.fillStyle = '#0A0A0A';
+    ctx.font = '500 15px "Noto Sans SC", sans-serif';
+    ctx.fillText(t, PAD + 48, ty + 5);
+    if (i < r.traits.length - 1) {
+      ctx.strokeStyle = '#0A0A0A'; ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath(); ctx.moveTo(PAD + 24, ty + 22); ctx.lineTo(PAD + CARD_W - 24, ty + 22); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    ty += 52;
+  });
+  cy += traitsH + 30;
+
+  // ===== 维度分布卡片 =====
+  drawCard(ctx, PAD, cy, CARD_W, dimsH, '维度分布');
+  let dy = cy + 60;
+  DIM_LABELS.forEach((d, i) => {
+    // 左标签
+    ctx.fillStyle = '#2B5AED';
+    ctx.font = '900 15px "Noto Sans SC", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(d.left, PAD + 24, dy + 14);
+    // 横条
+    const bx = PAD + 60, bw = CARD_W - 60 - 110, bh = 16;
+    ctx.fillStyle = '#FFF4D6';
+    ctx.fillRect(bx, dy, bw, bh);
+    ctx.strokeStyle = '#0A0A0A'; ctx.lineWidth = 2;
+    ctx.strokeRect(bx, dy, bw, bh);
+    // fill 斜纹
+    const fillW = (bw - 4) * dims[i] / 100;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(bx + 2, dy + 2, fillW, bh - 4); ctx.clip();
+    ctx.fillStyle = '#2B5AED';
+    ctx.fillRect(bx + 2, dy + 2, fillW, bh - 4);
+    ctx.fillStyle = '#00C2D1';
+    for (let sx = bx + 2; sx < bx + 2 + fillW; sx += 12) ctx.fillRect(sx, dy + 2, 6, bh - 4);
+    ctx.restore();
+    // 百分比黄块
+    const pctText = dims[i] + '%';
+    ctx.fillStyle = '#FFD60A';
+    const pctW = 56;
+    ctx.fillRect(bx + bw + 10, dy - 2, pctW, 20);
+    ctx.strokeStyle = '#0A0A0A'; ctx.lineWidth = 2;
+    ctx.strokeRect(bx + bw + 10, dy - 2, pctW, 20);
+    ctx.fillStyle = '#0A0A0A';
+    ctx.font = '800 12px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(pctText, bx + bw + 10 + pctW / 2, dy + 12);
+    // 右标签
+    ctx.fillStyle = '#FF3B30';
+    ctx.font = '900 15px "Noto Sans SC", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(d.right, bx + bw + 10 + pctW + 10, dy + 14);
+    dy += 48;
+  });
+  cy += dimsH + 30;
+
+  // ===== 建议卡片 =====
+  drawCard(ctx, PAD, cy, CARD_W, adviceH, '牛马生存建议');
+  ctx.fillStyle = '#FFD60A';
+  ctx.fillRect(PAD + 24, cy + 56, CARD_W - 48, 56);
+  ctx.strokeStyle = '#0A0A0A'; ctx.lineWidth = 2.5;
+  ctx.strokeRect(PAD + 24, cy + 56, CARD_W - 48, 56);
+  ctx.fillStyle = '#0A0A0A';
+  ctx.font = '500 15px "Noto Sans SC", sans-serif';
+  wrapText(ctx, r.advice, PAD + 40, cy + 90, CARD_W - 80, 20);
+  cy += adviceH + 30;
+
+  // ===== 同事图鉴卡片 =====
+  drawCard(ctx, PAD, cy, CARD_W, matchH, '同事图鉴');
+  const halfW = (CARD_W - 48 - 16) / 2;
+  // 最佳搭档
+  ctx.fillStyle = '#00C2D1';
+  ctx.fillRect(PAD + 24, cy + 56, halfW, 56);
+  ctx.strokeStyle = '#0A0A0A'; ctx.lineWidth = 2.5;
+  ctx.strokeRect(PAD + 24, cy + 56, halfW, 56);
+  ctx.fillStyle = '#0A0A0A';
+  ctx.font = '700 11px "JetBrains Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('最佳搭档', PAD + 24 + halfW / 2, cy + 78);
+  ctx.font = '900 15px "Noto Sans SC", sans-serif';
+  ctx.fillText(r.good, PAD + 24 + halfW / 2, cy + 100);
+  // 最怕遇到
+  ctx.fillStyle = '#FF3B30';
+  ctx.fillRect(PAD + 24 + halfW + 16, cy + 56, halfW, 56);
+  ctx.strokeRect(PAD + 24 + halfW + 16, cy + 56, halfW, 56);
+  ctx.fillStyle = '#FFF4D6';
+  ctx.font = '700 11px "JetBrains Mono", monospace';
+  ctx.fillText('最怕遇到', PAD + 24 + halfW + 16 + halfW / 2, cy + 78);
+  ctx.font = '900 15px "Noto Sans SC", sans-serif';
+  ctx.fillText(r.bad, PAD + 24 + halfW + 16 + halfW / 2, cy + 100);
+
+  // 输出
+  c.toBlob(async blob => {
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      alert('结果图已复制到剪贴板，直接粘贴到群里');
+    } catch (e) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '牛马人格-' + r.name + '.png';
+      a.click();
+      alert('剪贴板不可用，图片已下载');
+    }
+  });
+}
+
+function drawCard(ctx, x, y, w, h, title) {
+  // 阴影
+  ctx.fillStyle = '#0A0A0A';
+  ctx.fillRect(x + 6, y + 6, w, h);
+  // 白底
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = '#0A0A0A'; ctx.lineWidth = 3;
+  ctx.strokeRect(x, y, w, h);
+  // 标题黑标签
+  ctx.fillStyle = '#0A0A0A';
+  ctx.font = '800 13px "JetBrains Mono", monospace';
+  ctx.fillText(title, x + 24, y + 30);
+}
+
+function wrapText(ctx, text, x, y, maxW, lh) {
+  let line = '';
+  for (const ch of text) {
+    if (ctx.measureText(line + ch).width > maxW) { ctx.fillText(line, x, y); line = ch; y += lh; }
+    else line += ch;
+  }
+  ctx.fillText(line, x, y);
+}
+function switchView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('view-quiz').classList.contains('active')) return;
+  const k = e.key.toLowerCase();
+  if (k === 'a' || k === 'b' || k === 'c' || k === 'd') {
+    document.querySelector('.opt-' + k)?.click();
+  } else if (e.key === 'Enter') {
+    const b = document.getElementById('btnNext');
+    if (b.classList.contains('ready')) b.click();
+  }
+});
+</script>
+</body>
+</html>
